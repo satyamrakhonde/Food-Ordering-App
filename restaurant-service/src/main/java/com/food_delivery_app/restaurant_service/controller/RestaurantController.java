@@ -24,10 +24,6 @@ public class RestaurantController {
 
     @GetMapping
     public ResponseEntity<List<RestaurantResponseDTO>> getAllRestaurants() {
-//        List<RestaurantResponse> response = restaurantService.getAll()
-//                .stream()
-//                .map(RestaurantMapper::toResponse)
-//                .collect(Collectors.toList());
         return new ResponseEntity<>(restaurantService.getAll(), HttpStatus.OK);
     }
 
@@ -40,16 +36,11 @@ public class RestaurantController {
     public ResponseEntity<RestaurantResponseDTO> updateRestaurant(
             @PathVariable Long id,
             @RequestBody RestaurantRequestDTO request) {
-
-//        Restaurant updatedEntity = RestaurantMapper.toEntity(request);
-//        Restaurant updated = restaurantService.update(id, updatedEntity);
-
         return new ResponseEntity<>(restaurantService.update(id, request), HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<RestaurantResponseDTO> deleteRestaurant(@PathVariable Long id) {
-
         return new ResponseEntity<>(restaurantService.delete(id), HttpStatus.OK);
     }
 }

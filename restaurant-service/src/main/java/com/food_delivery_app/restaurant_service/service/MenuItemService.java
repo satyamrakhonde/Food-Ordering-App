@@ -33,7 +33,6 @@ public class MenuItemService {
     public List<MenuItemResponseDTO> getMenuItems(Long restaurantId) {
         Optional<MenuItem> menuItem = menuItemRepo.findById(restaurantId);
 
-
         return menuItem.stream()
                 .map(item ->
                         modelMapper.map(item, MenuItemResponseDTO.class))
