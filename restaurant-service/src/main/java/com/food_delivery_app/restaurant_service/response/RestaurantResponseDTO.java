@@ -8,7 +8,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class RestaurantResponse {
+public class RestaurantResponseDTO {
 
     private Long id;
     private String name;

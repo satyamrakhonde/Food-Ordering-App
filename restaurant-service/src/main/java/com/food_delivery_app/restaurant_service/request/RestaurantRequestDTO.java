@@ -2,6 +2,7 @@ package com.food_delivery_app.restaurant_service.request;
 
 
 import lombok.*;
+import org.hibernate.annotations.processing.Pattern;
 
 @Getter
 @Setter
