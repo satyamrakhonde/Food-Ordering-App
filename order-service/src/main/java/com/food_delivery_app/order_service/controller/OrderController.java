@@ -41,7 +41,7 @@ public class OrderController {
     public ResponseEntity<OrderResponseDTO> updateOrderStatus(
             @PathVariable Long id,
             @RequestBody UpdateOrderStatusRequest request) {
-        return new ResponseEntity<>(orderService.updateOrderStatus(id), HttpStatus.OK);
+        return new ResponseEntity<>(orderService.updateOrderStatus(id, request.getStatus()), HttpStatus.OK);
     }
 
     // 5. Delete Order
