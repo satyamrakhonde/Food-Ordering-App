@@ -3,6 +3,7 @@ package com.food_delivery_app.restaurant_service.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -21,6 +22,6 @@ public class Restaurant {
     private String contactNumber;
     private boolean openStatus = true;
 
-    @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<MenuItem> menuItems;
+    @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<MenuItem> menuItems = new ArrayList<>();
 }

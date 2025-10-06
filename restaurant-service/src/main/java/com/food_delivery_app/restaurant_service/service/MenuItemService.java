@@ -1,7 +1,9 @@
 package com.food_delivery_app.restaurant_service.service;
 
 import com.food_delivery_app.restaurant_service.entity.MenuItem;
+import com.food_delivery_app.restaurant_service.entity.Restaurant;
 import com.food_delivery_app.restaurant_service.repository.MenuItemRepository;
+import com.food_delivery_app.restaurant_service.repository.RestaurantRepository;
 import com.food_delivery_app.restaurant_service.request.MenuItemRequestDTO;
 import com.food_delivery_app.restaurant_service.response.MenuItemResponseDTO;
 import org.modelmapper.ModelMapper;
@@ -20,12 +22,24 @@ public class MenuItemService {
     @Autowired
     MenuItemRepository menuItemRepo;
 
+    @Autowired
+    RestaurantRepository restaurantRepository;
+
     public MenuItemResponseDTO addMenuItem(Long restaurantId, MenuItemRequestDTO request) {
+        Restaurant restaurant = restaurantRepository.findById(restaurantId)
+                .orElseThrow(() -> new RuntimeException("Restaurant not found with ID:" + restaurantId));
+
         MenuItem menuItem = modelMapper.map(request, MenuItem.class);
         menuItem.setName(request.getName());
         menuItem.setPrice(request.getPrice());
         menuItem.setDescription(request.getDescription());
-        menuItemRepo.save(menuItem);
+
+        menuItem.setRestaurant(restaurant); //set relation both sides
+        menuItem = menuItemRepo.save(menuItem);
+
+        //maintain bidirectional consistency
+        restaurant.getMenuItems().add(menuItem);
+        restaurantRepository.save(restaurant);
 
         return modelMapper.map(menuItem, MenuItemResponseDTO.class);
     }

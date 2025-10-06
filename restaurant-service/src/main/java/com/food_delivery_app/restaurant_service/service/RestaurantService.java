@@ -27,7 +27,7 @@ public class RestaurantService {
         restaurant.setAddress(restaurant.getAddress());
         restaurant.setContactNumber(restaurant.getContactNumber());
         restaurant.setOpenStatus(true);
-
+//        restaurant.setCategory
         Restaurant saved = restaurantRepo.save(restaurant);
         return modelMapper.map(saved, RestaurantResponseDTO.class);
     }
