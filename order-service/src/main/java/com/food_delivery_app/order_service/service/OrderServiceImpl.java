@@ -41,14 +41,14 @@ public class OrderServiceImpl implements OrderService {
         order.setCreatedAt(LocalDateTime.now());
         order.setUpdatedAt(LocalDateTime.now());
 
-        List<OrderItem> items = order.getItems().stream().map(itemReq -> {
+        List<OrderItem> items = request.getItems().stream().map(itemReq -> {
             OrderItem item = new OrderItem();
             item.setItemId(item.getItemId());
             item.setQuantity(item.getQuantity());
 
             //TODO: Fetch actual price from Restaurant serivce(via Feign client later)
             item.setPrice(BigDecimal.valueOf(100));
-            item.setSubTotal(item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())));
+            item.setSubTotal(item.getPrice().multiply(BigDecimal.valueOf(500))); //hard coded value for now
             item.setOrder(order);
             return item;
         }).toList();
@@ -59,7 +59,9 @@ public class OrderServiceImpl implements OrderService {
 
         order.setTotalAmount(totalAmount);
         order.setItems(items);
-        return null;
+        Order savedOrder = orderRepository.save(order);
+
+        return modelMapper.map(savedOrder, OrderResponseDTO.class);
     }
 
     @Override
