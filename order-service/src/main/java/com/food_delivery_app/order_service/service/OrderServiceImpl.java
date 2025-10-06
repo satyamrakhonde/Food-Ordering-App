@@ -1,7 +1,7 @@
 package com.food_delivery_app.order_service.service;
 
-import com.food_delivery_app.order_service.dto.CreateOrderRequestDTO;
-import com.food_delivery_app.order_service.dto.OrderResponseDTO;
+import com.food_delivery_app.order_service.client.RestaurantClient;
+import com.food_delivery_app.order_service.dto.*;
 import com.food_delivery_app.order_service.entity.Order;
 import com.food_delivery_app.order_service.entity.OrderItem;
 import com.food_delivery_app.order_service.entity.OrderStatus;
@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -25,15 +26,21 @@ public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final ModelMapper modelMapper;
+    private final RestaurantClient restaurantClient;
 
-    public OrderServiceImpl(OrderRepository orderRepository, OrderItemRepository orderItemRepository, ModelMapper modelMapper) {
+    public OrderServiceImpl(OrderRepository orderRepository, OrderItemRepository orderItemRepository, ModelMapper modelMapper, RestaurantClient restaurantClient) {
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.modelMapper = modelMapper;
+        this.restaurantClient = restaurantClient;
     }
 
     @Override
     public OrderResponseDTO createOrder(CreateOrderRequestDTO request) {
+
+        //Match all menu items from RestaurantService
+        List<MenuItemResponseDTO> menuItems = restaurantClient.getMenuItems(request.getRestaurantId());
+
         Order order = new Order();
         order.setUserId(request.getUserId());
         order.setRestaurantId(request.getRestaurantId());
@@ -41,24 +48,35 @@ public class OrderServiceImpl implements OrderService {
         order.setCreatedAt(LocalDateTime.now());
         order.setUpdatedAt(LocalDateTime.now());
 
-        List<OrderItem> items = request.getItems().stream().map(itemReq -> {
-            OrderItem item = new OrderItem();
-            item.setItemId(item.getItemId());
-            item.setQuantity(item.getQuantity());
 
-            //TODO: Fetch actual price from Restaurant serivce(via Feign client later)
-            item.setPrice(BigDecimal.valueOf(100));
-            item.setSubTotal(item.getPrice().multiply(BigDecimal.valueOf(500))); //hard coded value for now
-            item.setOrder(order);
-            return item;
-        }).toList();
+        List<OrderItem> orderItems = new ArrayList<>();
+        BigDecimal totalAmount = BigDecimal.ZERO;
 
-        BigDecimal totalAmount = items.stream()
-                .map(OrderItem::getSubTotal)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        for(OrderItemRequestDTO itemDTO : request.getItems()) {
 
+            //Find menu item from RestaurantService
+            MenuItemResponseDTO menuItem = menuItems.stream()
+                    .filter(mi -> mi.getId().equals(itemDTO.getItemId()))
+                    .findFirst()
+                    .orElseThrow(() -> new RuntimeException("Menu item not found : " + itemDTO.getItemId()));
+
+            if(!menuItem.isAvailable()) {
+                throw new RuntimeException("Menu item not available: "+ menuItem.getName());
+            }
+
+            OrderItem orderItem = new OrderItem();
+            orderItem.setItemId(menuItem.getId());
+            orderItem.setQuantity(itemDTO.getQuantity());
+            orderItem.setPrice(menuItem.getPrice().multiply(BigDecimal.valueOf(itemDTO.getQuantity())));
+            orderItem.setOrder(order);
+
+            totalAmount = totalAmount.add(orderItem.getSubTotal());
+            orderItems.add(orderItem);
+        }
+
+
+        order.setItems(orderItems);
         order.setTotalAmount(totalAmount);
-        order.setItems(items);
         Order savedOrder = orderRepository.save(order);
 
         return modelMapper.map(savedOrder, OrderResponseDTO.class);

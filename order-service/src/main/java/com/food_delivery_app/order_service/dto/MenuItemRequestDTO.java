@@ -1,7 +1,6 @@
-package com.food_delivery_app.restaurant_service.request;
+package com.food_delivery_app.order_service.dto;
 
 import lombok.*;
-import org.antlr.v4.runtime.misc.NotNull;
 
 import java.math.BigDecimal;
 

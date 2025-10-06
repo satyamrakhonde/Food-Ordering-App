@@ -3,6 +3,8 @@ package com.food_delivery_app.restaurant_service.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
+
 @Entity
 @Getter
 @Setter
@@ -15,7 +17,7 @@ public class MenuItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String name;
-    private Double price;
+    private BigDecimal price;
     private boolean available;
     private String description;
 

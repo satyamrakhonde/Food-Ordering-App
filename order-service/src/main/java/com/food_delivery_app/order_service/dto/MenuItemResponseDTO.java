@@ -1,4 +1,4 @@
-package com.food_delivery_app.restaurant_service.response;
+package com.food_delivery_app.order_service.dto;
 
 import lombok.*;
 
