@@ -89,10 +89,18 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public OrderResponseDTO getOrderById(Long id) {
-        Order order = orderRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Order not found with ID: " + id));
-        return modelMapper.map(order, OrderResponseDTO.class);
+    public OrderResponseDTO getOrderById(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found with ID: " + orderId));
+
+        OrderResponseDTO response = modelMapper.map(order, OrderResponseDTO.class);
+
+        //Fetch restaurant details via Feign Client
+        RestaurantResponseDTO restaurantResponseDTO = restaurantClient.getRestaurantById(order.getRestaurantId());
+        response.setRestaurantName(restaurantResponseDTO.getName());
+        response.setRestaurantAddress(restaurantResponseDTO.getAddress());
+
+        return response;
     }
 
     @Override

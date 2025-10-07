@@ -2,7 +2,9 @@ package com.food_delivery_app.order_service.client;
 
 import com.food_delivery_app.order_service.dto.MenuItemRequestDTO;
 import com.food_delivery_app.order_service.dto.MenuItemResponseDTO;
+import com.food_delivery_app.order_service.dto.RestaurantResponseDTO;
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
@@ -13,4 +15,7 @@ public interface RestaurantClient {
 
     @GetMapping("/restaurants/{id}/menu")
     List<MenuItemResponseDTO> getMenuItems(@PathVariable Long id);
+
+    @GetMapping("/restaurants/{id}")
+    RestaurantResponseDTO getRestaurantById(@PathVariable Long id);
 }

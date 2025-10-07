@@ -25,9 +25,9 @@ public class OrderController {
     }
 
     //2. Get Order By ID
-    @GetMapping("/{id}")
-    public ResponseEntity<OrderResponseDTO> getOrderById(@PathVariable Long id) {
-        return new ResponseEntity<>(orderService.getOrderById(id), HttpStatus.OK);
+    @GetMapping("/{orderId}")
+    public ResponseEntity<OrderResponseDTO> getOrderById(@PathVariable Long orderId) {
+        return new ResponseEntity<>(orderService.getOrderById(orderId), HttpStatus.OK);
     }
 
     // 3. Get All Orders for a User
