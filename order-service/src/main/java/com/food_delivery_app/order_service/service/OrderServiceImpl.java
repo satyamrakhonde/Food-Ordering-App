@@ -16,6 +16,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -99,6 +100,19 @@ public class OrderServiceImpl implements OrderService {
         RestaurantResponseDTO restaurantResponseDTO = restaurantClient.getRestaurantById(order.getRestaurantId());
         response.setRestaurantName(restaurantResponseDTO.getName());
         response.setRestaurantAddress(restaurantResponseDTO.getAddress());
+
+//        List<MenuItemResponseDTO> menuItems = restaurantResponseDTO.getMenuItems();
+        Map<Long, String> menuMap = restaurantResponseDTO.getMenuItems().stream()
+                    .collect(Collectors.toMap(MenuItemResponseDTO::getId, MenuItemResponseDTO::getName));
+
+        List<OrderItemResponseDTO> orderItemResponseDTOS = order.getItems().stream()
+                .map(item -> {
+                    OrderItemResponseDTO dto = modelMapper.map(item, OrderItemResponseDTO.class);
+                    dto.setItemName(menuMap.get(item.getItemId()));
+                    return dto;
+                }).toList();
+
+        response.setItems(orderItemResponseDTOS);
 
         return response;
     }
