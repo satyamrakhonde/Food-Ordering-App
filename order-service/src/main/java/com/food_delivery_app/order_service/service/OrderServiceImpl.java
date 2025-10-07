@@ -67,10 +67,16 @@ public class OrderServiceImpl implements OrderService {
             OrderItem orderItem = new OrderItem();
             orderItem.setItemId(menuItem.getId());
             orderItem.setQuantity(itemDTO.getQuantity());
-            orderItem.setPrice(menuItem.getPrice().multiply(BigDecimal.valueOf(itemDTO.getQuantity())));
+            orderItem.setPrice(menuItem.getPrice());
+
+            //calculate subtotal = price * quantity
+            BigDecimal subTotal = menuItem.getPrice().multiply(BigDecimal.valueOf(itemDTO.getQuantity()));
+            orderItem.setSubTotal(subTotal);
+
             orderItem.setOrder(order);
 
-            totalAmount = totalAmount.add(orderItem.getSubTotal());
+            //Add subtotal to total amount
+            totalAmount = totalAmount.add(subTotal);
             orderItems.add(orderItem);
         }
 
