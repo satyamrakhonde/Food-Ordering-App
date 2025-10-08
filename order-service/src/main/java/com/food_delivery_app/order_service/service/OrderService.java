@@ -13,7 +13,7 @@ public interface OrderService {
 
     List<OrderResponseDTO> getOrdersByUserId(Long userId);
 
-    OrderResponseDTO updateOrderStatus(Long id, OrderStatus status);
+    OrderResponseDTO updateOrderStatus(Long orderId, OrderStatus status);
 
-    OrderResponseDTO deleteOrder(Long id);
+    OrderResponseDTO deleteOrder(Long orderId);
 }

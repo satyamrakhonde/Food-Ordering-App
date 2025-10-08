@@ -37,16 +37,16 @@ public class OrderController {
     }
 
     //4. Update Order Status (PATCH)
-    @PatchMapping("/{id}/status")
+    @PatchMapping("/{orderId}/status")
     public ResponseEntity<OrderResponseDTO> updateOrderStatus(
-            @PathVariable Long id,
+            @PathVariable Long orderId,
             @RequestBody UpdateOrderStatusRequest request) {
-        return new ResponseEntity<>(orderService.updateOrderStatus(id, request.getStatus()), HttpStatus.OK);
+        return new ResponseEntity<>(orderService.updateOrderStatus(orderId, request.getStatus()), HttpStatus.OK);
     }
 
     // 5. Delete Order
-    @DeleteMapping("/{id}")
-    public ResponseEntity<OrderResponseDTO> deleteOrder(@PathVariable Long id) {
-        return new ResponseEntity<>(orderService.deleteOrder(id), HttpStatus.OK);
+    @DeleteMapping("/{orderId}")
+    public ResponseEntity<OrderResponseDTO> deleteOrder(@PathVariable Long orderId) {
+        return new ResponseEntity<>(orderService.deleteOrder(orderId), HttpStatus.OK);
     }
 }

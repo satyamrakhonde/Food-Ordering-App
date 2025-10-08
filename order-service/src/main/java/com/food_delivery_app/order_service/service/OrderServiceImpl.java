@@ -101,7 +101,6 @@ public class OrderServiceImpl implements OrderService {
         response.setRestaurantName(restaurantResponseDTO.getName());
         response.setRestaurantAddress(restaurantResponseDTO.getAddress());
 
-//        List<MenuItemResponseDTO> menuItems = restaurantResponseDTO.getMenuItems();
         Map<Long, String> menuMap = restaurantResponseDTO.getMenuItems().stream()
                     .collect(Collectors.toMap(MenuItemResponseDTO::getId, MenuItemResponseDTO::getName));
 
@@ -125,9 +124,9 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public OrderResponseDTO updateOrderStatus(Long id, OrderStatus status) {
-        Order order = orderRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Order not found with ID: " + id));
+    public OrderResponseDTO updateOrderStatus(Long orderId, OrderStatus status) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found with ID: " + orderId));
 
         order.setOrderStatus(status);
         order.setUpdatedAt(LocalDateTime.now());
@@ -137,8 +136,10 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public OrderResponseDTO deleteOrder(Long id) {
-        Optional<Order> order = orderRepository.findById(id);
-        return null;
+    public OrderResponseDTO deleteOrder(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Orrder not found with id: " + orderId));
+        orderRepository.delete(order);
+        return modelMapper.map(order, OrderResponseDTO.class);
     }
 }
