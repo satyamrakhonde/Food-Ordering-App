@@ -1,5 +1,6 @@
 package com.food_delivery_app.delivery_service.config;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
