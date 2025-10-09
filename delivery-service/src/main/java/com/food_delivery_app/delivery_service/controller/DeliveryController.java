@@ -20,10 +20,10 @@ public class DeliveryController {
         return new ResponseEntity<>(deliveryService.assignDelivery(request), HttpStatus.OK);
     }
 
-    @PutMapping("/{orderId}/status")
-    public ResponseEntity<DeliveryResponseDTO> assignDelivery(@PathVariable Long orderId,
+    @PutMapping("/{deliveryId}/status")
+    public ResponseEntity<DeliveryResponseDTO> assignDelivery(@PathVariable Long deliveryId,
             @RequestParam String status) {
-        return new ResponseEntity<>(deliveryService.updateDeliveryStatus(orderId, status), HttpStatus.OK);
+        return new ResponseEntity<>(deliveryService.updateDeliveryStatus(deliveryId, status), HttpStatus.OK);
     }
 
 }

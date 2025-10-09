@@ -6,5 +6,5 @@ import com.food_delivery_app.delivery_service.dto.DeliveryResponseDTO;
 public interface DeliveryService {
     public DeliveryResponseDTO assignDelivery(DeliveryRequestDTO request);
 
-    public DeliveryResponseDTO updateDeliveryStatus(Long orderId, String status);
+    public DeliveryResponseDTO updateDeliveryStatus(Long deliveryId, String status);
 }
