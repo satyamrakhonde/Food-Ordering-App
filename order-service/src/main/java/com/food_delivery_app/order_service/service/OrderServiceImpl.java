@@ -5,11 +5,14 @@ import com.food_delivery_app.order_service.dto.*;
 import com.food_delivery_app.order_service.entity.Order;
 import com.food_delivery_app.order_service.entity.OrderItem;
 import com.food_delivery_app.order_service.entity.OrderStatus;
+import com.food_delivery_app.order_service.event.OrderCreatedEvent;
 import com.food_delivery_app.order_service.repository.OrderItemRepository;
 import com.food_delivery_app.order_service.repository.OrderRepository;
 
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -28,6 +31,11 @@ public class OrderServiceImpl implements OrderService {
     private final OrderItemRepository orderItemRepository;
     private final ModelMapper modelMapper;
     private final RestaurantClient restaurantClient;
+
+    @Autowired
+    private KafkaTemplate<String, Object> kafkaTemplate;
+
+    private static final String ORDER_CREATED_TOPIC = "order-created";
 
     public OrderServiceImpl(OrderRepository orderRepository, OrderItemRepository orderItemRepository, ModelMapper modelMapper, RestaurantClient restaurantClient) {
         this.orderRepository = orderRepository;
@@ -85,6 +93,18 @@ public class OrderServiceImpl implements OrderService {
         order.setItems(orderItems);
         order.setTotalAmount(totalAmount);
         Order savedOrder = orderRepository.save(order);
+
+        //Publish Event to Kafka
+        OrderCreatedEvent event = new OrderCreatedEvent(
+                savedOrder.getId(),
+                savedOrder.getUserId(),
+                savedOrder.getRestaurantId(),
+                savedOrder.getTotalAmount(),
+                savedOrder.getOrderStatus().toString()
+        );
+
+        kafkaTemplate.send(ORDER_CREATED_TOPIC, event);
+        System.out.println("Published 'prder-created' event for order ID: " +savedOrder.getId());
 
         return modelMapper.map(savedOrder, OrderResponseDTO.class);
     }
