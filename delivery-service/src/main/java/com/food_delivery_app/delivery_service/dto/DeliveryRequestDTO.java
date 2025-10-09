@@ -4,4 +4,7 @@ import lombok.Data;
 
 @Data
 public class DeliveryRequestDTO {
+
+    private Long orderId;
+    private String address;
 }

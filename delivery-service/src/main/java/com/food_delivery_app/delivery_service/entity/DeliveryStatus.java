@@ -1,4 +1,9 @@
 package com.food_delivery_app.delivery_service.entity;
 
-public class DeliveryStatus {
+public enum DeliveryStatus {
+    ASSIGNED,
+    PICKED_UP,
+    IN_TRANSIT,
+    DELIVERED,
+    CANCELLED
 }

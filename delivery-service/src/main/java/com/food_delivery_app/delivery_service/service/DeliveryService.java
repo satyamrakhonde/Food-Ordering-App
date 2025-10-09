@@ -1,4 +1,10 @@
 package com.food_delivery_app.delivery_service.service;
 
-public class DeliveryService {
+import com.food_delivery_app.delivery_service.dto.DeliveryRequestDTO;
+import com.food_delivery_app.delivery_service.dto.DeliveryResponseDTO;
+
+public interface DeliveryService {
+    public DeliveryResponseDTO assignDelivery(DeliveryRequestDTO request);
+
+    public DeliveryResponseDTO updateDeliveryStatus(Long orderId, String status);
 }
