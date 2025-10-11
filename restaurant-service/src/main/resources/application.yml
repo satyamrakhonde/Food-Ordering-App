@@ -1,0 +1,27 @@
+#spring:
+#  kafka:
+#    bootstrap-servers: localhost:9092
+#
+#    consumer:
+#      group-id: restaurant-group
+#      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+#      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+#
+#      # Real deserializer to delegate to
+#      properties:
+#        spring:
+#          deserializer:
+#            value:
+#              delegate:
+#                class: org.springframework.kafka.support.serializer.JsonDeserializer
+#          json:
+#            trusted:
+#              packages: com.food_delivery_app.*
+#            value:
+#              default:
+#                type: com.food_delivery_App.restaurant_service.event.OrderCreatedEvent
+#
+#
+#    listener:
+#      ack-mode: record
+#      missing-topics-fatal: false

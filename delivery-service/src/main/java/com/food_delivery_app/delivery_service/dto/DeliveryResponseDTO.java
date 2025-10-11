@@ -12,6 +12,7 @@ public class DeliveryResponseDTO {
     private Long orderId;
     private Long deliveryAgentId;
     private DeliveryStatus status;
+    private String address;
     private LocalDateTime assignedAt;
     private LocalDateTime deliveredAt;
 }

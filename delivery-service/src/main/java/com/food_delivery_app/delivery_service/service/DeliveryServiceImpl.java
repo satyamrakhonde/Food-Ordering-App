@@ -10,6 +10,8 @@ import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -35,15 +37,38 @@ public class DeliveryServiceImpl implements DeliveryService{
     }
 
     @Override
-    public DeliveryResponseDTO updateDeliveryStatus(Long deliveryId, String status) {
+    public DeliveryResponseDTO updateDeliveryStatus(Long deliveryId, String newStatus) {
         Delivery delivery = deliveryRepository.findById(deliveryId)
                 .orElseThrow(() -> new RuntimeException("Delivery Not found"));
 
-        delivery.setStatus(DeliveryStatus.valueOf(status));
-        if(status.equals("DELIVERED")){
+        delivery.setStatus(DeliveryStatus.valueOf(newStatus));
+        if(newStatus.equals("DELIVERED")){
             delivery.setDeliveredAt(LocalDateTime.now());
         }
         Delivery updatedDelivery = deliveryRepository.save(delivery);
         return modelMapper.map(updatedDelivery, DeliveryResponseDTO.class);
+    }
+
+    @Override
+    public DeliveryResponseDTO getDeliveryByDeliveryId(Long deliveryId) {
+        Delivery delivery = deliveryRepository.findById(deliveryId)
+                .orElseThrow(() -> new RuntimeException("Delivery not found"));
+
+        return modelMapper.map(delivery, DeliveryResponseDTO.class);
+    }
+
+    @Override
+    public DeliveryResponseDTO getDeliveryByOrderId(Long orderId) {
+        Delivery delivery = deliveryRepository.findByOrderId(orderId)
+                .orElseThrow(() -> new RuntimeException("Delivery not found for orderId: " + orderId));
+        return modelMapper.map(delivery, DeliveryResponseDTO.class);
+    }
+
+    @Override
+    public List<DeliveryResponseDTO> getDeliveriesByAgentId(Long agentId) {
+        List<Delivery> deliveries = deliveryRepository.findByDeliveryAgentId(agentId);
+        return deliveries.stream()
+                .map(delivery -> modelMapper.map(delivery, DeliveryResponseDTO.class))
+                .collect(Collectors.toList());
     }
 }

@@ -95,16 +95,18 @@ public class OrderServiceImpl implements OrderService {
         Order savedOrder = orderRepository.save(order);
 
         //Publish Event to Kafka
-        OrderCreatedEvent event = new OrderCreatedEvent(
-                savedOrder.getId(),
-                savedOrder.getUserId(),
-                savedOrder.getRestaurantId(),
-                savedOrder.getTotalAmount(),
-                savedOrder.getOrderStatus().toString()
-        );
 
-        kafkaTemplate.send(ORDER_CREATED_TOPIC, event);
-        System.out.println("Published 'prder-created' event for order ID: " +savedOrder.getId());
+        //For now we are skipping Kafka
+//        OrderCreatedEvent event = new OrderCreatedEvent(
+//                savedOrder.getId(),
+//                savedOrder.getUserId(),
+//                savedOrder.getRestaurantId(),
+//                savedOrder.getTotalAmount(),
+//                savedOrder.getOrderStatus().toString()
+//        );
+//
+//        kafkaTemplate.send(ORDER_CREATED_TOPIC, event);
+//        System.out.println("Published 'prder-created' event for order ID: " +savedOrder.getId());
 
         return modelMapper.map(savedOrder, OrderResponseDTO.class);
     }
