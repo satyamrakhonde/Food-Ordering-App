@@ -3,10 +3,14 @@ package com.food_delivery_app.delivery_service.service;
 import com.food_delivery_app.delivery_service.dto.DeliveryRequestDTO;
 import com.food_delivery_app.delivery_service.dto.DeliveryResponseDTO;
 import com.food_delivery_app.delivery_service.entity.Delivery;
+import com.food_delivery_app.delivery_service.entity.DeliveryAgent;
 import com.food_delivery_app.delivery_service.entity.DeliveryStatus;
+import com.food_delivery_app.delivery_service.repository.DeliveryAgentRepository;
 import com.food_delivery_app.delivery_service.repository.DeliveryRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -20,29 +24,55 @@ public class DeliveryServiceImpl implements DeliveryService{
 
     private final DeliveryRepository deliveryRepository;
     private final ModelMapper modelMapper;
+    private final DeliveryAgentRepository deliveryAgentRepository;
 
     @Override
+    @Transactional
     public DeliveryResponseDTO assignDelivery(DeliveryRequestDTO request) {
-//        Delivery delivery = modelMapper.map(request, Delivery.class);
 
-        //Check if a delivery already exsits for this orderID
-        Optional<Delivery> existingDelivery = deliveryRepository.findByOrderId(request.getOrderId());
-        if(existingDelivery.isPresent()) {
-            System.out.println("Delivery already exists for orderId: " + request.getOrderId());
-            return modelMapper.map(existingDelivery.get(), DeliveryResponseDTO.class);
-        }
+       int maxRetries = 3;
+       for(int attempt = 1; attempt <= maxRetries; attempt++) {
 
-        Delivery delivery = Delivery.builder()
-                .orderId(request.getOrderId())
-                .deliveryAgentId(10L) // dummy agent for now
-                .address(request.getAddress())
-                .status(DeliveryStatus.ASSIGNED)
-                .assignedAt(LocalDateTime.now())
-                .build();
+           try{
+               //Step 1 : Check if a delivery already exsits for this orderID
+               Optional<Delivery> existingDelivery = deliveryRepository.findByOrderId(request.getOrderId());
+               if(existingDelivery.isPresent()) {
+                   System.out.println("Delivery already exists for orderId: " + request.getOrderId()); //throw new Api exception error handling to be done later
+                   return modelMapper.map(existingDelivery.get(), DeliveryResponseDTO.class);
+               }
 
-        Delivery savedDelivery = deliveryRepository.save(delivery);
+               //Step 2: Find Available agent
+               DeliveryAgent agent = deliveryAgentRepository.findFirstByAvailableTrueOrderByIdAsc()
+                       .orElseThrow(() -> new RuntimeException("No available agents"));
 
-        return modelMapper.map(savedDelivery, DeliveryResponseDTO.class);
+               //Step 3: Mark as unavailable (this triggers version check)
+               agent.setAvailable(false);
+               deliveryAgentRepository.save(agent);
+
+               //Step 4: Create new Delivery
+               Delivery delivery = Delivery.builder()
+                       .orderId(request.getOrderId())
+                       .deliveryAgentId(agent.getId())
+                       .address(request.getAddress())
+                       .status(DeliveryStatus.ASSIGNED)
+                       .assignedAt(LocalDateTime.now())
+                       .build();
+
+               Delivery savedDelivery = deliveryRepository.save(delivery);
+               return modelMapper.map(savedDelivery, DeliveryResponseDTO.class);
+
+           } catch (OptimisticLockingFailureException e) {
+               System.out.println("Conflict detected (Attempt" + attempt + ") , retrying...");
+               if(attempt == maxRetries) {
+                   throw new RuntimeException("Failed to assign agent after multiple retries");
+               }
+               //small delay before retrying
+               try{
+                   Thread.sleep(100L * attempt);
+               } catch (InterruptedException ignored) {}
+           }
+       }
+       throw new RuntimeException("Unable to assign delivery agent");
     }
 
     @Override
