@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -23,6 +24,14 @@ public class DeliveryServiceImpl implements DeliveryService{
     @Override
     public DeliveryResponseDTO assignDelivery(DeliveryRequestDTO request) {
 //        Delivery delivery = modelMapper.map(request, Delivery.class);
+
+        //Check if a delivery already exsits for this orderID
+        Optional<Delivery> existingDelivery = deliveryRepository.findByOrderId(request.getOrderId());
+        if(existingDelivery.isPresent()) {
+            System.out.println("Delivery already exists for orderId: " + request.getOrderId());
+            return modelMapper.map(existingDelivery.get(), DeliveryResponseDTO.class);
+        }
+
         Delivery delivery = Delivery.builder()
                 .orderId(request.getOrderId())
                 .deliveryAgentId(10L) // dummy agent for now

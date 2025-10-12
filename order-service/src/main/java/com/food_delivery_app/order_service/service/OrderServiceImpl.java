@@ -1,11 +1,13 @@
 package com.food_delivery_app.order_service.service;
 
+import com.food_delivery_app.delivery_service.dto.DeliveryRequestDTO;
+import com.food_delivery_app.delivery_service.dto.DeliveryResponseDTO;
+import com.food_delivery_app.order_service.client.DeliveryClient;
 import com.food_delivery_app.order_service.client.RestaurantClient;
 import com.food_delivery_app.order_service.dto.*;
 import com.food_delivery_app.order_service.entity.Order;
 import com.food_delivery_app.order_service.entity.OrderItem;
 import com.food_delivery_app.order_service.entity.OrderStatus;
-import com.food_delivery_app.order_service.event.OrderCreatedEvent;
 import com.food_delivery_app.order_service.repository.OrderItemRepository;
 import com.food_delivery_app.order_service.repository.OrderRepository;
 
@@ -20,7 +22,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,17 +32,19 @@ public class OrderServiceImpl implements OrderService {
     private final OrderItemRepository orderItemRepository;
     private final ModelMapper modelMapper;
     private final RestaurantClient restaurantClient;
+    private final DeliveryClient deliveryClient;
 
     @Autowired
     private KafkaTemplate<String, Object> kafkaTemplate;
 
     private static final String ORDER_CREATED_TOPIC = "order-created";
 
-    public OrderServiceImpl(OrderRepository orderRepository, OrderItemRepository orderItemRepository, ModelMapper modelMapper, RestaurantClient restaurantClient) {
+    public OrderServiceImpl(OrderRepository orderRepository, OrderItemRepository orderItemRepository, ModelMapper modelMapper, RestaurantClient restaurantClient, DeliveryClient deliveryClient) {
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.modelMapper = modelMapper;
         this.restaurantClient = restaurantClient;
+        this.deliveryClient = deliveryClient;
     }
 
     @Override
@@ -108,6 +111,20 @@ public class OrderServiceImpl implements OrderService {
 //        kafkaTemplate.send(ORDER_CREATED_TOPIC, event);
 //        System.out.println("Published 'prder-created' event for order ID: " +savedOrder.getId());
 
+        //Call Delivery Service through Feign
+        try {
+
+            DeliveryRequestDTO deliveryRequest = new DeliveryRequestDTO();
+            deliveryRequest.setOrderId(savedOrder.getId());
+            deliveryRequest.setAddress("Default Address for now"); //Later from userService
+
+            DeliveryResponseDTO deliveryResponse = deliveryClient.assignDelivery(deliveryRequest);
+            System.out.println("Delivery created for Order " +savedOrder.getId() +
+                    "Delivery ID:" + deliveryResponse.getId());
+        } catch (Exception e) {
+            System.err.println("Delivery creation failed for Order" +savedOrder.getId());
+            e.printStackTrace();
+        }
         return modelMapper.map(savedOrder, OrderResponseDTO.class);
     }
 
