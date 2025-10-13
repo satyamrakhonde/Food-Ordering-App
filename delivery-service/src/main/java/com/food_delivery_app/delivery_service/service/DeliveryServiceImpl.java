@@ -5,6 +5,7 @@ import com.food_delivery_app.delivery_service.dto.DeliveryResponseDTO;
 import com.food_delivery_app.delivery_service.entity.Delivery;
 import com.food_delivery_app.delivery_service.entity.DeliveryAgent;
 import com.food_delivery_app.delivery_service.entity.DeliveryStatus;
+import com.food_delivery_app.delivery_service.exception.ApiException;
 import com.food_delivery_app.delivery_service.repository.DeliveryAgentRepository;
 import com.food_delivery_app.delivery_service.repository.DeliveryRepository;
 import jakarta.transaction.Transactional;
@@ -13,6 +14,7 @@ import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -42,13 +44,13 @@ public class DeliveryServiceImpl implements DeliveryService{
                //Step 1 : Check if a delivery already exsits for this orderID
                Optional<Delivery> existingDelivery = deliveryRepository.findByOrderId(request.getOrderId());
                if(existingDelivery.isPresent()) {
-                   System.out.println("Delivery already exists for orderId: " + request.getOrderId()); //throw new Api exception error handling to be done later
-                   return modelMapper.map(existingDelivery.get(), DeliveryResponseDTO.class);
+                   throw new ApiException("Delivery already Exists for this order", HttpStatus.CONFLICT);
+//                   return modelMapper.map(existingDelivery.get(), DeliveryResponseDTO.class);
                }
 
                //Step 2: Find Available agent
                DeliveryAgent agent = deliveryAgentRepository.findFirstByAvailableTrueOrderByIdAsc()
-                       .orElseThrow(() -> new RuntimeException("No available agents"));
+                       .orElseThrow(() -> new ApiException("No available agent at the moment", HttpStatus.SERVICE_UNAVAILABLE));
 
                //Step 3: Mark as unavailable (this triggers version check)
                agent.setAvailable(false);
