@@ -10,6 +10,8 @@ import com.food_delivery_app.delivery_service.repository.DeliveryRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 
@@ -26,9 +28,12 @@ public class DeliveryServiceImpl implements DeliveryService{
     private final ModelMapper modelMapper;
     private final DeliveryAgentRepository deliveryAgentRepository;
 
+    private static final Logger log = LoggerFactory.getLogger(DeliveryServiceImpl.class);
+
     @Override
     @Transactional
     public DeliveryResponseDTO assignDelivery(DeliveryRequestDTO request) {
+        log.info("Creating delivery for orderId: {}", request.getOrderId());
 
        int maxRetries = 3;
        for(int attempt = 1; attempt <= maxRetries; attempt++) {
@@ -59,6 +64,8 @@ public class DeliveryServiceImpl implements DeliveryService{
                        .build();
 
                Delivery savedDelivery = deliveryRepository.save(delivery);
+
+               log.info("Delivery created successfully with agentId: {}", savedDelivery.getDeliveryAgentId());
                return modelMapper.map(savedDelivery, DeliveryResponseDTO.class);
 
            } catch (OptimisticLockingFailureException e) {

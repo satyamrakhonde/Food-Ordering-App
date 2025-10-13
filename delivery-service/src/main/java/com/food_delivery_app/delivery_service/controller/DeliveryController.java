@@ -1,5 +1,6 @@
 package com.food_delivery_app.delivery_service.controller;
 
+import com.food_delivery_app.delivery_service.common.ResponseDTO;
 import com.food_delivery_app.delivery_service.dto.DeliveryRequestDTO;
 import com.food_delivery_app.delivery_service.dto.DeliveryResponseDTO;
 import com.food_delivery_app.delivery_service.entity.DeliveryStatus;
@@ -19,8 +20,15 @@ public class DeliveryController {
     private final DeliveryService deliveryService;
 
     @PostMapping
-    public ResponseEntity<DeliveryResponseDTO> assignDelivery(@RequestBody DeliveryRequestDTO request) {
-        return new ResponseEntity<>(deliveryService.assignDelivery(request), HttpStatus.OK);
+    public ResponseEntity<ResponseDTO<DeliveryResponseDTO>> assignDelivery(@RequestBody DeliveryRequestDTO request) {
+        DeliveryResponseDTO response = deliveryService.assignDelivery(request);
+
+//        ResponseDTO<DeliveryResponseDTO> responseDTO =
+//         new ResponseDTO<>("Delivery Assigned Successfully", response);
+//
+//        return ResponseEntity.ok(responseDTO);
+
+        return new ResponseEntity<>(new ResponseDTO<>("Delivery Assigned Successfully", response), HttpStatus.OK);
     }
 
     @PutMapping("/{deliveryId}/status")
