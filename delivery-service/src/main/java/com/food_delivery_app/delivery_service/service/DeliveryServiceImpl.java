@@ -17,7 +17,9 @@ import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -51,6 +53,18 @@ public class DeliveryServiceImpl implements DeliveryService{
                //Step 2: Find Available agent
                DeliveryAgent agent = deliveryAgentRepository.findFirstByAvailableTrueOrderByIdAsc()
                        .orElseThrow(() -> new ApiException("No available agent at the moment", HttpStatus.SERVICE_UNAVAILABLE));
+
+               //Added after delivery status is updated
+               if(agent == null) {
+                   log.warn("No available agents - creating pending deliveries for order Id {}", request.getOrderId());
+                   Delivery pending = Delivery.builder()
+                           .orderId(request.getOrderId())
+                           .address(request.getAddress())
+                           .status(DeliveryStatus.PENDING_ASSIGNMENT)
+                           .build();
+                   deliveryRepository.save(pending);
+                   throw new ApiException("No agents available, delivery pending assignment", HttpStatus.SERVICE_UNAVAILABLE);
+               }
 
                //Step 3: Mark as unavailable (this triggers version check)
                agent.setAvailable(false);
@@ -87,12 +101,23 @@ public class DeliveryServiceImpl implements DeliveryService{
     @Override
     public DeliveryResponseDTO updateDeliveryStatus(Long deliveryId, String newStatus) {
         Delivery delivery = deliveryRepository.findById(deliveryId)
-                .orElseThrow(() -> new RuntimeException("Delivery Not found"));
+                .orElseThrow(() -> new ApiException("Delivery not found", HttpStatus.NOT_FOUND));
 
-        delivery.setStatus(DeliveryStatus.valueOf(newStatus));
-        if(newStatus.equals("DELIVERED")){
+        DeliveryStatus status = DeliveryStatus.valueOf(newStatus.toUpperCase());
+        delivery.setStatus(status);
+
+        if(status == DeliveryStatus.DELIVERED) {
             delivery.setDeliveredAt(LocalDateTime.now());
+
+            DeliveryAgent agent = deliveryAgentRepository.findById(delivery.getDeliveryAgentId())
+                    .orElseThrow(() -> new ApiException("Agent not found", HttpStatus.NOT_FOUND));
+
+            agent.setAvailable(true);
+            deliveryAgentRepository.save(agent);
+
+            log.info("Agent {} marked available again", agent.getId());
         }
+
         Delivery updatedDelivery = deliveryRepository.save(delivery);
         return modelMapper.map(updatedDelivery, DeliveryResponseDTO.class);
     }

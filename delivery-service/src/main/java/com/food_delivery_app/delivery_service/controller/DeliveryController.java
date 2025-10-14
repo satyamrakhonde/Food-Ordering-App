@@ -32,10 +32,12 @@ public class DeliveryController {
     }
 
     @PutMapping("/{deliveryId}/status")
-    public ResponseEntity<DeliveryResponseDTO> assignDelivery(@PathVariable Long deliveryId,
+    public ResponseEntity<ResponseDTO<DeliveryResponseDTO>> assignDelivery(@PathVariable Long deliveryId,
             @RequestParam String newStatus) {
-        return new ResponseEntity<>(deliveryService.updateDeliveryStatus(deliveryId, newStatus), HttpStatus.OK);
+        DeliveryResponseDTO response = deliveryService.updateDeliveryStatus(deliveryId, newStatus);
+        return new ResponseEntity<>(new ResponseDTO<>("Delivery status updated Successfully", response), HttpStatus.OK);
     }
+
 
     @GetMapping("/{deliveryId}")
     public ResponseEntity<DeliveryResponseDTO> getDeliveriesByDeliveryId(@PathVariable Long deliveryId) {
