@@ -8,6 +8,7 @@ import com.food_delivery_app.order_service.dto.*;
 import com.food_delivery_app.order_service.entity.Order;
 import com.food_delivery_app.order_service.entity.OrderItem;
 import com.food_delivery_app.order_service.entity.OrderStatus;
+import com.food_delivery_app.order_service.event.OrderCreatedEvent;
 import com.food_delivery_app.order_service.repository.OrderItemRepository;
 import com.food_delivery_app.order_service.repository.OrderRepository;
 
@@ -33,22 +34,25 @@ public class OrderServiceImpl implements OrderService {
     private final ModelMapper modelMapper;
     private final RestaurantClient restaurantClient;
     private final DeliveryClient deliveryClient;
+    private final OrderEventProducer orderEventProducer;
 
     @Autowired
     private KafkaTemplate<String, Object> kafkaTemplate;
 
     private static final String ORDER_CREATED_TOPIC = "order-created";
 
-    public OrderServiceImpl(OrderRepository orderRepository, OrderItemRepository orderItemRepository, ModelMapper modelMapper, RestaurantClient restaurantClient, DeliveryClient deliveryClient) {
+    public OrderServiceImpl(OrderRepository orderRepository, OrderItemRepository orderItemRepository, ModelMapper modelMapper, RestaurantClient restaurantClient, DeliveryClient deliveryClient, OrderEventProducer orderEventProducer) {
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.modelMapper = modelMapper;
         this.restaurantClient = restaurantClient;
         this.deliveryClient = deliveryClient;
+        this.orderEventProducer = orderEventProducer;
     }
 
     @Override
     public OrderResponseDTO createOrder(CreateOrderRequestDTO request) {
+        log.info("🧾 Creating order for userId={} and restaurantId={}", request.getUserId(), request.getRestaurantId());
 
         //Match all menu items from RestaurantService
         List<MenuItemResponseDTO> menuItems = restaurantClient.getMenuItems(request.getRestaurantId());
@@ -100,31 +104,31 @@ public class OrderServiceImpl implements OrderService {
         //Publish Event to Kafka
 
         //For now we are skipping Kafka
-//        OrderCreatedEvent event = new OrderCreatedEvent(
-//                savedOrder.getId(),
-//                savedOrder.getUserId(),
-//                savedOrder.getRestaurantId(),
-//                savedOrder.getTotalAmount(),
-//                savedOrder.getOrderStatus().toString()
-//        );
+        OrderCreatedEvent event = new OrderCreatedEvent(
+                savedOrder.getId(),
+                savedOrder.getUserId(),
+                savedOrder.getRestaurantId(),
+                savedOrder.getTotalAmount(),
+                savedOrder.getOrderStatus().toString()
+        );
 //
-//        kafkaTemplate.send(ORDER_CREATED_TOPIC, event);
-//        System.out.println("Published 'prder-created' event for order ID: " +savedOrder.getId());
+        kafkaTemplate.send(ORDER_CREATED_TOPIC, event);
+        log.info("ORDER_CREATED event published for Order ID: {}", savedOrder.getId());
 
-        //Call Delivery Service through Feign
-        try {
-
-            DeliveryRequestDTO deliveryRequest = new DeliveryRequestDTO();
-            deliveryRequest.setOrderId(savedOrder.getId());
-            deliveryRequest.setAddress("Default Address for now"); //Later from userService
-
-            DeliveryResponseDTO deliveryResponse = deliveryClient.assignDelivery(deliveryRequest);
-            System.out.println("Delivery created for Order " +savedOrder.getId() +
-                    "Delivery ID:" + deliveryResponse.getId());
-        } catch (Exception e) {
-            System.err.println("Delivery creation failed for Order" +savedOrder.getId());
-            e.printStackTrace();
-        }
+        //Call Delivery Service through Feign - not required as we are using KAFKA now
+//        try {
+//
+//            DeliveryRequestDTO deliveryRequest = new DeliveryRequestDTO();
+//            deliveryRequest.setOrderId(savedOrder.getId());
+//            deliveryRequest.setAddress("Default Address for now"); //Later from userService
+//
+//            DeliveryResponseDTO deliveryResponse = deliveryClient.assignDelivery(deliveryRequest);
+//            System.out.println("Delivery created for Order " +savedOrder.getId() +
+//                    "Delivery ID:" + deliveryResponse.getId());
+//        } catch (Exception e) {
+//            System.err.println("Delivery creation failed for Order" +savedOrder.getId());
+//            e.printStackTrace();
+//        }
         return modelMapper.map(savedOrder, OrderResponseDTO.class);
     }
 
