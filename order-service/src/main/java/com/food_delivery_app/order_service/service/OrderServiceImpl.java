@@ -39,7 +39,7 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private KafkaTemplate<String, Object> kafkaTemplate;
 
-    private static final String ORDER_CREATED_TOPIC = "order-created";
+    private static final String ORDER_CREATED_TOPIC = "order-created-events";
 
     public OrderServiceImpl(OrderRepository orderRepository, OrderItemRepository orderItemRepository, ModelMapper modelMapper, RestaurantClient restaurantClient, DeliveryClient deliveryClient, OrderEventProducer orderEventProducer) {
         this.orderRepository = orderRepository;
