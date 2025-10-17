@@ -1,9 +1,6 @@
 package com.food_delivery_app.order_service.client;
 
 
-
-//import com.food_delivery_app.dto.DeliveryRequestDTO;
-//import com.food_delivery_app.dto.DeliveryResponseDTO;
 import com.food_delivery_app.delivery_service.dto.DeliveryRequestDTO;
 import com.food_delivery_app.delivery_service.dto.DeliveryResponseDTO;
 import org.springframework.cloud.openfeign.FeignClient;

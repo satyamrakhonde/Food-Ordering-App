@@ -1,4 +1,4 @@
-package com.food_delivery_app.order_service.event;
+package com.food_delivery_app.common.dto.events;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

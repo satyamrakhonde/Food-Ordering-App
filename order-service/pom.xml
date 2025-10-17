@@ -68,13 +68,13 @@
 			<artifactId>spring-kafka</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>com.food-delivery-app</groupId>
+			<groupId>com.food_delivery_app</groupId>
 			<artifactId>delivery-service</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>com.food-delivery-app</groupId>
+			<groupId>com.food_delivery_app</groupId>
 			<artifactId>common-dto</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 			<scope>compile</scope>

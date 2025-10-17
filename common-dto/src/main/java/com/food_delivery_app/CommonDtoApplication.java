@@ -1,4 +1,4 @@
-package com.food_delivery_app.common_dto;
+package com.food_delivery_app;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

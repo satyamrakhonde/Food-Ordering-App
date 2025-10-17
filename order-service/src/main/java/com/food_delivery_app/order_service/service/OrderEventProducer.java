@@ -1,6 +1,6 @@
 package com.food_delivery_app.order_service.service;
 
-import com.food_delivery_app.order_service.event.OrderCreatedEvent;
+import com.food_delivery_app.common.dto.events.OrderCreatedEvent;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

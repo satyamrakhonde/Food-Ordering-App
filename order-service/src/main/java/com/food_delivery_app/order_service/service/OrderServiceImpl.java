@@ -1,14 +1,12 @@
 package com.food_delivery_app.order_service.service;
 
-import com.food_delivery_app.delivery_service.dto.DeliveryRequestDTO;
-import com.food_delivery_app.delivery_service.dto.DeliveryResponseDTO;
+import com.food_delivery_app.common.dto.events.OrderCreatedEvent;
 import com.food_delivery_app.order_service.client.DeliveryClient;
 import com.food_delivery_app.order_service.client.RestaurantClient;
 import com.food_delivery_app.order_service.dto.*;
 import com.food_delivery_app.order_service.entity.Order;
 import com.food_delivery_app.order_service.entity.OrderItem;
 import com.food_delivery_app.order_service.entity.OrderStatus;
-import com.food_delivery_app.order_service.event.OrderCreatedEvent;
 import com.food_delivery_app.order_service.repository.OrderItemRepository;
 import com.food_delivery_app.order_service.repository.OrderRepository;
 
