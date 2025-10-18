@@ -1,5 +1,6 @@
 package com.food_delivery_app.delivery_service.service;
 
+import com.food_delivery_app.common.dto.events.OrderCreatedEvent;
 import com.food_delivery_app.delivery_service.dto.DeliveryRequestDTO;
 import com.food_delivery_app.delivery_service.dto.DeliveryResponseDTO;
 import com.food_delivery_app.delivery_service.entity.Delivery;
@@ -59,8 +60,8 @@ public class DeliveryServiceImpl implements DeliveryService{
                    log.warn("No available agents - creating pending deliveries for order Id {}", request.getOrderId());
                    Delivery pending = Delivery.builder()
                            .orderId(request.getOrderId())
-                           .address(request.getAddress())
-                           .status(DeliveryStatus.PENDING_ASSIGNMENT)
+                           .deliveryAddress(request.getAddress())
+                           .status(DeliveryStatus.PENDING)
                            .build();
                    deliveryRepository.save(pending);
                    throw new ApiException("No agents available, delivery pending assignment", HttpStatus.SERVICE_UNAVAILABLE);
@@ -71,17 +72,25 @@ public class DeliveryServiceImpl implements DeliveryService{
                deliveryAgentRepository.save(agent);
 
                //Step 4: Create new Delivery
-               Delivery delivery = Delivery.builder()
-                       .orderId(request.getOrderId())
-                       .deliveryAgentId(agent.getId())
-                       .address(request.getAddress())
-                       .status(DeliveryStatus.ASSIGNED)
-                       .assignedAt(LocalDateTime.now())
-                       .build();
+//               Delivery delivery = Delivery.builder()
+//                       .orderId(request.getOrderId())
+////                       .deliveryAgentId(agent.getId())
+////                       .deliveryAgent.getId(agent.getId())
+//                       .address(request.getAddress())
+//                       .status(DeliveryStatus.ASSIGNED)
+//                       .assignedAt(LocalDateTime.now())
+//                       .build();
 
-               Delivery savedDelivery = deliveryRepository.save(delivery);
+               /// I have changed the above implementation of builder to this below -test it
+                Delivery delivery = new Delivery();
+                delivery.setOrderId(request.getOrderId());
+                DeliveryAgent deliveryAgent = new DeliveryAgent();
+                deliveryAgent.setId(agent.getId());
+                deliveryAgent.setName(agent.getName());
+                delivery.setDeliveryAgent(deliveryAgent);
+                Delivery savedDelivery = deliveryRepository.save(delivery);
 
-               log.info("Delivery created successfully with agentId: {}", savedDelivery.getDeliveryAgentId());
+               log.info("Delivery created successfully with agentId: {}", savedDelivery.getDeliveryAgent().getId());
                return modelMapper.map(savedDelivery, DeliveryResponseDTO.class);
 
            } catch (OptimisticLockingFailureException e) {
@@ -109,7 +118,7 @@ public class DeliveryServiceImpl implements DeliveryService{
         if(status == DeliveryStatus.DELIVERED) {
             delivery.setDeliveredAt(LocalDateTime.now());
 
-            DeliveryAgent agent = deliveryAgentRepository.findById(delivery.getDeliveryAgentId())
+            DeliveryAgent agent = deliveryAgentRepository.findById(delivery.getDeliveryAgent().getId())
                     .orElseThrow(() -> new ApiException("Agent not found", HttpStatus.NOT_FOUND));
 
             agent.setAvailable(true);
@@ -143,5 +152,45 @@ public class DeliveryServiceImpl implements DeliveryService{
         return deliveries.stream()
                 .map(delivery -> modelMapper.map(delivery, DeliveryResponseDTO.class))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public void createDeliveryFromOrderEvent(OrderCreatedEvent event) {
+        log.info("Creating delivery for order ID:  {}", event.getOrderId());
+
+        //1. Prevent duplicate deliveries for the same order
+        if(deliveryRepository.findByOrderId(event.getOrderId()).isPresent()) {
+            log.warn("Delivery already exists for Order ID: {}", event.getOrderId());
+            return;
+        }
+
+        //2. Create new delivery record
+        Delivery delivery = new Delivery();
+        delivery.setOrderId(event.getOrderId());
+        delivery.setUserId(event.getUserId());
+        delivery.setRestaurantId(event.getRestaurantId());
+        delivery.setStatus(DeliveryStatus.PENDING);
+        delivery.setCreatedAt(LocalDateTime.now());
+
+        //3. Assign available agent (concurrency-safe)
+        Optional<DeliveryAgent> availableAgent = deliveryAgentRepository.findFirstByAvailableTrueOrderByIdAsc();
+
+        if(availableAgent.isPresent()) {
+            DeliveryAgent agent = availableAgent.get();
+            agent.setAvailable(false);
+            delivery.setDeliveryAgent(agent);
+            delivery.setStatus(DeliveryStatus.ASSIGNED);
+
+            deliveryAgentRepository.save(agent);
+            log.info("Assigned agent {} to order {}", agent.getId(), event.getOrderId());
+        } else {
+            log.warn("No available agent, marking delivery as PENDING");
+            delivery.setStatus(DeliveryStatus.PENDING);
+        }
+
+        //4. Save Delivery
+        deliveryRepository.save(delivery);
+        log.info("Delivery created successfully for order {} with status {}",
+                event.getOrderId(), delivery.getStatus());
     }
 }

@@ -1,11 +1,13 @@
 package com.food_delivery_app.delivery_service.entity;
 
 public enum DeliveryStatus {
+    PENDING,
     ASSIGNED,
     PICKED_UP,
     IN_TRANSIT,
     DELIVERED,
     CANCELLED,
-    PENDING_ASSIGNMENT,
+    FAILED,
+//    PENDING_ASSIGNMENT,
     OUT_FOR_DELIVERY
 }

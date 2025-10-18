@@ -18,13 +18,28 @@ public class Delivery {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, unique = true)
     private Long orderId;
-    private Long deliveryAgentId;
-    private String address;
+
+    @Column(nullable = false)
+    private Long userId;
+
+    @Column(nullable = false)
+    private Long restaurantId;
+
+//  Delivery agent assigned (nullable until assigned)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "delivery_agent_id")
+    private DeliveryAgent deliveryAgent;
+
+    // Delivery address — optional, we can fetch later from user service
+    private String deliveryAddress;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private DeliveryStatus status;
 
+    private LocalDateTime createdAt;
     private LocalDateTime assignedAt;
     private LocalDateTime deliveredAt;
 }
