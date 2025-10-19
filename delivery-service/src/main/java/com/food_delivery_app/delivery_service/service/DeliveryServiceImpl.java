@@ -1,5 +1,6 @@
 package com.food_delivery_app.delivery_service.service;
 
+import com.food_delivery_app.common.dto.events.DeliveryAssignedEvent;
 import com.food_delivery_app.common.dto.events.OrderCreatedEvent;
 import com.food_delivery_app.delivery_service.dto.DeliveryRequestDTO;
 import com.food_delivery_app.delivery_service.dto.DeliveryResponseDTO;
@@ -14,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -34,6 +36,9 @@ public class DeliveryServiceImpl implements DeliveryService{
     private final DeliveryAgentRepository deliveryAgentRepository;
 
     private static final Logger log = LoggerFactory.getLogger(DeliveryServiceImpl.class);
+
+    @Autowired
+    private DeliveryAssignedProducer deliveryAssignedProducer;
 
     @Override
     @Transactional
@@ -195,5 +200,16 @@ public class DeliveryServiceImpl implements DeliveryService{
         deliveryRepository.save(delivery);
         log.info("Delivery created successfully for order {} with status {}",
                 event.getOrderId(), delivery.getStatus());
+
+        //Publish DeliveryAssignedEvent
+        DeliveryAssignedEvent assignedEvent = new DeliveryAssignedEvent(
+                delivery.getOrderId(),
+                delivery.getId(),
+                delivery.getDeliveryAgent().getId(),
+                delivery.getStatus().name()
+        );
+
+        deliveryAssignedProducer.sendDeliveryAssignedEvent(assignedEvent);
+        log.info("DeliveryAssignedEvent published for order ID: {}", delivery.getOrderId());
     }
 }
