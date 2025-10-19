@@ -23,6 +23,6 @@ public class DeliveryAgent {
     @Column(nullable = false)
     private Boolean available = true;
 
-    @Version
-    private Long version;   //Used by JPA for optmistic locking
+//    @Version
+//    private Long version;   //Used by JPA for optmistic locking
 }
