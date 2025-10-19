@@ -172,6 +172,7 @@ public class DeliveryServiceImpl implements DeliveryService{
         delivery.setStatus(DeliveryStatus.PENDING);
         delivery.setCreatedAt(LocalDateTime.now());
 
+
         //3. Assign available agent (concurrency-safe)
         Optional<DeliveryAgent> availableAgent = deliveryAgentRepository.findFirstByAvailableTrueOrderByIdAsc();
 
@@ -180,6 +181,8 @@ public class DeliveryServiceImpl implements DeliveryService{
             agent.setAvailable(false);
             delivery.setDeliveryAgent(agent);
             delivery.setStatus(DeliveryStatus.ASSIGNED);
+            delivery.setDeliveryAddress(delivery.getDeliveryAddress());
+            delivery.setAssignedAt(LocalDateTime.now());
 
             deliveryAgentRepository.save(agent);
             log.info("Assigned agent {} to order {}", agent.getId(), event.getOrderId());
